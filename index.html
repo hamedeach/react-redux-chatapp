@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>React & Redux Chat App</title>
+    <link rel="stylesheet" href="style.css">
+    <!--
+            add references for the packages will be used 
+        -->
+    <script src='https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js'></script>
+    <script src='https://unpkg.com/react@16.3.0-alpha.1/umd/react.development.js'></script>
+    <script src='https://unpkg.com/react-dom@16.3.0-alpha.1/umd/react-dom.development.js'></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="./components/addusercomponent.js" type="type='text/babel'"></script>
+
+</head>
+
+<body>
+    <div id="main-div">
+
+
+
+    </div>
+    <script type='text/javascript'>
+
+
+
+        const AddUser_ActionType = 'add_user';
+        const SendMsg_ActionType = 'Send_Msg';
+
+        function addUser_Action(user) {
+            return {
+                type: AddUser_ActionType,
+                user
+            }
+        }
+
+        function sendmsg_Action(msg) {
+            console.log(msg);
+            return {
+                type: SendMsg_ActionType,
+                msg
+            }
+        }
+
+        const checker =(store)=>(next)=>(action)=>{
+            if(action.type===AddUser_ActionType && action.user.username===""){
+              return  alert('can not add empty user');
+            }
+
+            const substrings = ["sex", "fuck"];
+            if(action.type===SendMsg_ActionType && substrings.some(v => action.msg.msg.includes(v))){
+                return alert('no +18 messages');
+
+            }
+            return next(action);
+        }
+
+        function users_Reducer(state = [], action) {
+            switch (action.type) {
+                case AddUser_ActionType:
+                    return state.concat(action.user);
+                default: return state;
+            }
+        }
+
+        function msg_Reducer(state = [], action) {
+            switch (action.type) {
+                case SendMsg_ActionType:
+                    return state.concat(action.msg);
+                default: return state;
+            }
+
+        }
+
+        const store = Redux.createStore(
+            Redux.combineReducers({ users_Reducer, msg_Reducer }),
+            Redux.applyMiddleware(checker,));
+
+        store.subscribe(() => {
+            const {
+                users_Reducer,
+                msg_Reducer,
+            } = store.getState();
+
+
+        });
+
+
+
+    </script>
+    <script type='text/babel'>
+        /*sub component to add users*/
+
+        class AddUser extends React.Component {
+
+            adduserfunc = (e) => {
+                e.preventDefault();
+                alert('add new user');
+                const input = document.getElementById('username-txt');
+                const username = input.value;
+                input.value = '';
+
+                this.props.store.dispatch(addUser_Action({ username, }))
+
+            }
+            render() {
+                return (
+                    <div>
+                        <input id="username-txt"
+                            type="text"
+                            placeholder="Add user name" />
+                        <button id='adduser-btn'
+                            onClick={this.adduserfunc}>Add User</button>
+                    </div>
+                )
+
+            }
+        }
+
+
+        class Messages extends React.Component {
+            render() {
+                const { users_Reducer, msg_Reducer } = this.props.store.getState();
+                const msgs = msg_Reducer;
+                return (
+                    <div>
+                        <h2>Messages...</h2>
+                        <div>
+                            {
+                                msgs.map((msg) => (
+                                    <div>
+                                        <hr />
+                                        <span>{msg.time} </span>
+                                        <br></br>
+                                        <span>{msg.username}' : ' </span>
+                                        <span>{msg.msg}</span>
+                                        <hr />
+                                    </div>
+                                ))
+                            }
+                        </div>
+                    </div>
+                )
+            }
+        }
+
+        /* user sender component */
+        class UserSender extends React.Component {
+
+            sendamsg = (e) => {
+                e.preventDefault();
+                const msg = this.usermsg.value;
+                this.usermsg.value = '';
+
+                let now = new Date().toLocaleString()
+                console.log(this.username);
+
+                this.props.store.dispatch(sendmsg_Action({
+                    time: now,
+                    username: this.username,
+                    msg,
+                }))
+
+
+            }
+
+            render() {
+                const { users_Reducer, msg_Reducer } = this.props.store.getState();
+                const users = users_Reducer;
+                return (
+                    <div>
+                        {
+                            users.map((user) => (
+                                <div key={user.username}>
+                                    <h3>{user.username}</h3>
+                                    <input
+                                        ref={(usermsg, username) => {
+                                            this.usermsg = usermsg;
+                                            this.username = user.username;
+                                        }}
+                                        type="text"
+                                        placeholder="send a message" />
+                                    <button onClick={this.sendamsg}>Send</button>
+                                </div>
+                            ))
+                        }
+
+                    </div>
+
+                )
+            }
+        }
+
+
+        /* main component*/
+        class ChatApp extends React.Component {
+
+            componentDidMount() {
+                const mystore = this.props.store;
+                mystore.subscribe(() => this.forceUpdate());
+                console.log('did mount')
+            }
+
+
+            render() {
+                console.log(this.props.store.getState());
+                return (
+                    <div>
+                        <h1> React-Redux-Chat-App </h1>
+                        <div className="row">
+                            <div className="column">
+                                <AddUser store={this.props.store} />
+                                <UserSender store={this.props.store} />
+                            </div>
+                            <div className="column" >
+                                <Messages store={this.props.store} />
+                            </div>
+                        </div>
+                    </div>
+                )
+            }
+
+        }
+
+        ReactDOM.render(
+            <ChatApp store={store} />,
+            document.getElementById('main-div')
+        )
+
+    </script>
+
+</body>
+
+</html>
