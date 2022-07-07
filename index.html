@@ -43,13 +43,13 @@
             }
         }
 
-        const checker =(store)=>(next)=>(action)=>{
-            if(action.type===AddUser_ActionType && action.user.username===""){
-              return  alert('can not add empty user');
+        const checker = (store) => (next) => (action) => {
+            if (action.type === AddUser_ActionType && action.user.username === "") {
+                return alert('can not add empty user');
             }
 
             const substrings = ["sex", "fuck"];
-            if(action.type===SendMsg_ActionType && substrings.some(v => action.msg.msg.includes(v))){
+            if (action.type === SendMsg_ActionType && substrings.some(v => action.msg.msg.includes(v))) {
                 return alert('no +18 messages');
 
             }
@@ -129,7 +129,7 @@
                         <div>
                             {
                                 msgs.map((msg) => (
-                                    <div>
+                                    <div key={`${msg.time}-${msg.username}`}>
                                         <hr />
                                         <span>{msg.time} </span>
                                         <br></br>
@@ -148,19 +148,29 @@
         /* user sender component */
         class UserSender extends React.Component {
 
+
             sendamsg = (e) => {
                 e.preventDefault();
-                const msg = this.usermsg.value;
-                this.usermsg.value = '';
 
+                //const msg = this.usermsg.value;
+                //this.usermsg.value = '';
+                const username = e.target.getAttribute('username');
+                const msg = document.getElementById(`msg-${username}`).value;
+                document.getElementById(`msg-${username}`).value='';
+                console.log(msg);
+
+
+
+                
                 let now = new Date().toLocaleString()
                 console.log(this.username);
 
                 this.props.store.dispatch(sendmsg_Action({
                     time: now,
-                    username: this.username,
+                    username,
                     msg,
                 }))
+            
 
 
             }
@@ -174,14 +184,21 @@
                             users.map((user) => (
                                 <div key={user.username}>
                                     <h3>{user.username}</h3>
-                                    <input
-                                        ref={(usermsg, username) => {
-                                            this.usermsg = usermsg;
-                                            this.username = user.username;
-                                        }}
+                                    <input key={`${user.username}-msg`}
+                                    id={`msg-${user.username}`}
+
+                                        /*
+                                            ref={(usermsg, username) => {
+                                                this.usermsg = usermsg;
+                                                this.username = user.username;
+                                            }}
+                                        */
+
+
+
                                         type="text"
                                         placeholder="send a message" />
-                                    <button onClick={this.sendamsg}>Send</button>
+                                    <button key={`${user.username}sender`} username={user.username} onClick={this.sendamsg}>Send</button>
                                 </div>
                             ))
                         }
